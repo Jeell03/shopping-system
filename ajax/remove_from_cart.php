@@ -1,9 +1,11 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+header('Content-Type: application/json');
+
 include '../config/database.php';
 include '../includes/functions.php';
-
-header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['success' => false, 'message' => 'Invalid request method']);
@@ -11,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $input = json_decode(file_get_contents('php://input'), true);
-$productId = (int)$input['product_id'];
+$productId = (int)($input['product_id'] ?? ($_POST['product_id'] ?? 0));
 
 if ($productId <= 0) {
     echo json_encode(['success' => false, 'message' => 'Invalid product ID']);
@@ -19,14 +21,12 @@ if ($productId <= 0) {
 }
 
 removeFromCart($productId);
+$breakdown = getCartBreakdown();
 
 echo json_encode([
     'success' => true,
-    'message' => 'Product removed from cart',
-    'cart_count' => getCartCount()
+    'message' => 'Item removed from cart',
+    'cart_count' => getCartCount(),
+    'breakdown' => $breakdown
 ]);
 ?>
-
-
-
-

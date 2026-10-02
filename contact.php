@@ -1,385 +1,168 @@
 <?php
-ob_start();
-session_start();
-include 'config/database.php';
-include 'includes/functions.php';
+require_once 'config/database.php';
+require_once 'includes/functions.php';
 
 $success = '';
 $error = '';
+$name = '';
+$email = '';
+$subject = '';
+$message = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $name = sanitize($_POST['name']);
-    $email = sanitize($_POST['email']);
-    $subject = sanitize($_POST['subject']);
-    $message = sanitize($_POST['message']);
+    $name = sanitize($_POST['name'] ?? '');
+    $email = sanitize($_POST['email'] ?? '');
+    $subject = sanitize($_POST['subject'] ?? '');
+    $message = sanitize($_POST['message'] ?? '');
     
     // Validation
     if (empty($name) || empty($email) || empty($subject) || empty($message)) {
-        $error = 'Please fill in all fields';
+        $error = 'Please fill in all required fields.';
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $error = 'Please enter a valid email address';
+        $error = 'Please enter a valid email address.';
     } else {
-        // Save to database
         try {
             $stmt = $pdo->prepare("INSERT INTO contact_messages (name, email, subject, message, created_at) VALUES (?, ?, ?, ?, NOW())");
             $stmt->execute([$name, $email, $subject, $message]);
-            
-            // Send email notification (optional - requires mail server setup)
-            $adminEmail = 'admin@shopeasy.com';
-            $emailSubject = 'New Contact Message: ' . $subject;
-            $emailBody = "
-                New contact message received:
-                
-                Name: $name
-                Email: $email
-                Subject: $subject
-                Message: $message
-                
-                Reply to: $email
-            ";
-            
-            // Uncomment the line below if you have mail server configured
-            // mail($adminEmail, $emailSubject, $emailBody, "From: $email");
-            
-            $success = 'Thank you for your message! We will get back to you within 24 hours.';
-            
-            // Clear form data
+            $success = 'Thank you for your message! Our customer support team will get back to you within 24 hours.';
             $name = $email = $subject = $message = '';
         } catch (Exception $e) {
-            $error = 'Sorry, there was an error sending your message. Please try again.';
+            $error = 'Sorry, there was an issue sending your message. Please try again.';
         }
     }
 }
+
+$pageTitle = 'Contact Us - 24/7 Customer Support - ShopEasy';
+$activeNav = 'contact';
+
+require_once 'includes/header.php';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contact Us - ShopEasy</title>
-    <link rel="stylesheet" href="assets/css/style.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-</head>
-<body>
-    <!-- Header -->
-    <header class="header">
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">
-                    <h1><a href="index.php">ShopEasy</a></h1>
-                </div>
-                
-                <div class="search-bar">
-                    <form action="search.php" method="GET">
-                        <input type="text" name="query" placeholder="Search products..." required>
-                        <button type="submit"><i class="fas fa-search"></i></button>
-                    </form>
-                </div>
-                
-                <div class="header-actions">
-                    <div class="user-menu">
-                        <?php if (isset($_SESSION['user_id'])): ?>
-                            <a href="profile.php" class="user-link">
-                                <i class="fas fa-user"></i>
-                                <?php echo htmlspecialchars($_SESSION['username']); ?>
-                            </a>
-                            <a href="logout.php" class="logout-link">Logout</a>
-                        <?php else: ?>
-                            <a href="login.php" class="login-link">Login</a>
-                            <a href="register.php" class="register-link">Register</a>
-                        <?php endif; ?>
-                    </div>
-                    
-                    <div class="cart">
-                        <a href="cart.php" class="cart-link">
-                            <i class="fas fa-shopping-cart"></i>
-                            <span class="cart-count"><?php echo getCartCount(); ?></span>
-                        </a>
-                    </div>
-                </div>
-            </div>
-            
-            <nav class="main-nav">
-                <ul>
-                    <li><a href="index.php">Home</a></li>
-                    <li><a href="products.php">All Products</a></li>
-                    <li><a href="products.php?category=electronics">Electronics</a></li>
-                    <li><a href="products.php?category=clothing">Clothing</a></li>
-                    <li><a href="products.php?category=home">Home & Garden</a></li>
-                    <li><a href="products.php?category=sports">Sports</a></li>
-                    <li><a href="contact.php" class="active">Contact</a></li>
-                </ul>
-            </nav>
+
+<main class="contact-page-wrapper" style="padding: 24px 0 60px;">
+    <div class="container">
+        <!-- Breadcrumbs -->
+        <nav class="catalog-breadcrumb" aria-label="breadcrumb">
+            <a href="index.php"><i class="fas fa-home"></i> Home</a>
+            <i class="fas fa-chevron-right"></i>
+            <span>Contact Us</span>
+        </nav>
+
+        <div style="text-align: center; max-width: 650px; margin: 0 auto 36px;">
+            <h1 style="font-family: 'Poppins', sans-serif; font-size: 28px; font-weight: 800; color: #0f172a; margin-bottom: 8px;">
+                We're Here to Help You
+            </h1>
+            <p style="font-size: 14px; color: #64748b; line-height: 1.6;">
+                Have questions regarding your order, tracking shipments, warranty, or returns? Reach out to our dedicated 24/7 support specialists.
+            </p>
         </div>
-    </header>
 
-    <!-- Contact Section -->
-    <section class="contact-section">
-        <div class="container">
-            <div class="contact-header">
-                <h1>Contact Us</h1>
-                <p>We'd love to hear from you. Send us a message and we'll respond as soon as possible.</p>
+        <div style="display: grid; grid-template-columns: 1fr 1.3fr; gap: 32px; align-items: start;">
+            <!-- Left Column: Support Channels & Details -->
+            <div>
+                <div style="background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 28px; box-shadow: var(--shadow-sm); margin-bottom: 24px;">
+                    <h2 style="font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 20px;">
+                        Customer Care Channels
+                    </h2>
+
+                    <div style="display: flex; flex-direction: column; gap: 20px;">
+                        <div style="display: flex; gap: 16px; align-items: flex-start;">
+                            <div style="width: 44px; height: 44px; border-radius: 10px; background: #eff6ff; color: #2563eb; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">
+                                <i class="fas fa-phone-alt"></i>
+                            </div>
+                            <div>
+                                <h3 style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 2px;">Phone Support</h3>
+                                <p style="font-size: 13px; color: #475569; margin-bottom: 2px;">+91 81417 16722 / 1800-200-EASY</p>
+                                <span style="font-size: 11px; color: #10b981; font-weight: 600;">Mon - Sat, 9:00 AM - 8:00 PM IST</span>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 16px; align-items: flex-start;">
+                            <div style="width: 44px; height: 44px; border-radius: 10px; background: #ecfdf5; color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <div>
+                                <h3 style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 2px;">Email Support</h3>
+                                <p style="font-size: 13px; color: #475569; margin-bottom: 2px;">support@shopeasy.com</p>
+                                <span style="font-size: 11px; color: #64748b;">Average response time: Within 2 hours</span>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 16px; align-items: flex-start;">
+                            <div style="width: 44px; height: 44px; border-radius: 10px; background: #fef3c7; color: #d97706; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div>
+                                <h3 style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 2px;">Corporate Headquarters</h3>
+                                <p style="font-size: 13px; color: #475569; line-height: 1.5;">
+                                    ShopEasy Commerce Pvt. Ltd.<br>
+                                    Level 4, Express Towers, Bandra Kurla Complex<br>
+                                    Mumbai, Maharashtra 400051, India
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Self-Serve Help Box -->
+                <div style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); border-radius: 16px; padding: 24px; color: #ffffff;">
+                    <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 6px;">Need Instant Answers?</h3>
+                    <p style="font-size: 12px; opacity: 0.9; line-height: 1.5; margin-bottom: 16px;">
+                        Check our comprehensive FAQ knowledge base for quick steps on order tracking, return requests, and promo codes.
+                    </p>
+                    <a href="faq.php" class="btn btn-accent btn-sm" style="display: inline-block;">
+                        Browse FAQs <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
             </div>
 
-            <div class="contact-content">
-                <div class="contact-info">
-                    <h2>Get in Touch</h2>
-                    <p>Have a question about our products or need help with your order? We're here to help!</p>
-                    
-                    <div class="contact-methods">
-                        <div class="contact-method">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <div>
-                                <h3>Address</h3>
-                                <p>123 Shopping Street<br>ALTHAN, AL 10001<br>United States</p>
-                            </div>
+            <!-- Right Column: Interactive Send Message Form -->
+            <div style="background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 32px; box-shadow: var(--shadow-sm);">
+                <h2 style="font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 6px;">Send us a Direct Message</h2>
+                <p style="font-size: 13px; color: #64748b; margin-bottom: 24px;">Fill out the form below and we'll reply to your email address promptly.</p>
+
+                <?php if ($success): ?>
+                    <div style="background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; border-radius: 8px; padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-check-circle" style="font-size: 18px;"></i>
+                        <span><?php echo htmlspecialchars($success); ?></span>
+                    </div>
+                <?php endif; ?>
+
+                <?php if ($error): ?>
+                    <div style="background: #fef2f2; color: #b91c1c; border: 1px solid #f87171; border-radius: 8px; padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-exclamation-circle" style="font-size: 18px;"></i>
+                        <span><?php echo htmlspecialchars($error); ?></span>
+                    </div>
+                <?php endif; ?>
+
+                <form action="contact.php" method="POST">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                        <div>
+                            <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px;">Your Name *</label>
+                            <input type="text" name="name" value="<?php echo htmlspecialchars($name ?: ($_SESSION['username'] ?? '')); ?>" required placeholder="John Doe" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px;">
                         </div>
-                        
-                        <div class="contact-method">
-                            <i class="fas fa-phone"></i>
-                            <div>
-                                <h3>Phone</h3>
-                                <p>+91 81417 16722<br>Mon-Fri: 9AM-6PM EST</p>
-                            </div>
-                        </div>
-                        
-                        <div class="contact-method">
-                            <i class="fas fa-envelope"></i>
-                            <div>
-                                <h3>Email</h3>
-                                <p>support@shopeasy.com<br>We respond within 24 hours</p>
-                            </div>
-                        </div>
-                        
-                        <div class="contact-method">
-                            <i class="fas fa-clock"></i>
-                            <div>
-                                <h3>Business Hours</h3>
-                                <p>Monday - Friday: 9:00 AM - 6:00 PM<br>Saturday: 10:00 AM - 4:00 PM<br>Sunday: Closed</p>
-                            </div>
+                        <div>
+                            <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px;">Email Address *</label>
+                            <input type="email" name="email" value="<?php echo htmlspecialchars($email ?: ($_SESSION['email'] ?? '')); ?>" required placeholder="john@example.com" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px;">
                         </div>
                     </div>
-                    
-                    <div class="social-links">
-                        <h3>Follow Us</h3>
-                        <div class="social-icons">
-                            <a href="#" class="social-link"><i class="fab fa-facebook"></i></a>
-                            <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
-                            <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
-                            <a href="#" class="social-link"><i class="fab fa-youtube"></i></a>
-                            <a href="#" class="social-link"><i class="fab fa-linkedin"></i></a>
-                        </div>
+
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px;">Subject *</label>
+                        <input type="text" name="subject" value="<?php echo htmlspecialchars($subject); ?>" required placeholder="e.g. Order Tracking Inquiry #ORD-..." style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px;">
                     </div>
-                </div>
-                
-                <div class="contact-form-container">
-                    <div class="contact-form">
-                        <h2>Send us a Message</h2>
-                        
-                        <?php if ($success): ?>
-                            <div class="flash-message flash-success">
-                                <i class="fas fa-check-circle"></i>
-                                <?php echo $success; ?>
-                            </div>
-                        <?php endif; ?>
-                        
-                        <?php if ($error): ?>
-                            <div class="flash-message flash-error">
-                                <i class="fas fa-exclamation-circle"></i>
-                                <?php echo $error; ?>
-                            </div>
-                        <?php endif; ?>
-                        
-                        <form method="POST" data-validate>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="name">Full Name *</label>
-                                    <input type="text" id="name" name="name" required 
-                                           value="<?php echo isset($name) ? htmlspecialchars($name) : ''; ?>">
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="email">Email Address *</label>
-                                    <input type="email" id="email" name="email" required 
-                                           value="<?php echo isset($email) ? htmlspecialchars($email) : ''; ?>">
-                                </div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="subject">Subject *</label>
-                                <select id="subject" name="subject" required>
-                                    <option value="">Select a subject</option>
-                                    <option value="General Inquiry" <?php echo (isset($subject) && $subject === 'General Inquiry') ? 'selected' : ''; ?>>General Inquiry</option>
-                                    <option value="Order Support" <?php echo (isset($subject) && $subject === 'Order Support') ? 'selected' : ''; ?>>Order Support</option>
-                                    <option value="Product Question" <?php echo (isset($subject) && $subject === 'Product Question') ? 'selected' : ''; ?>>Product Question</option>
-                                    <option value="Return/Refund" <?php echo (isset($subject) && $subject === 'Return/Refund') ? 'selected' : ''; ?>>Return/Refund</option>
-                                    <option value="Technical Support" <?php echo (isset($subject) && $subject === 'Technical Support') ? 'selected' : ''; ?>>Technical Support</option>
-                                    <option value="Partnership" <?php echo (isset($subject) && $subject === 'Partnership') ? 'selected' : ''; ?>>Partnership</option>
-                                    <option value="Other" <?php echo (isset($subject) && $subject === 'Other') ? 'selected' : ''; ?>>Other</option>
-                                </select>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="message">Message *</label>
-                                <textarea id="message" name="message" rows="6" required 
-                                          placeholder="Please describe your inquiry in detail..."><?php echo isset($message) ? htmlspecialchars($message) : ''; ?></textarea>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label class="checkbox-label">
-                                    <input type="checkbox" name="newsletter" value="1">
-                                    <span class="checkmark"></span>
-                                    Subscribe to our newsletter for updates and special offers
-                                </label>
-                            </div>
-                            
-                            <button type="submit" class="btn btn-primary btn-large">
-                                <i class="fas fa-paper-plane"></i>
-                                Send Message
-                            </button>
-                        </form>
+
+                    <div style="margin-bottom: 24px;">
+                        <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px;">Your Message *</label>
+                        <textarea name="message" rows="5" required placeholder="Describe your question or issue in detail..." style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; resize: vertical;"><?php echo htmlspecialchars($message); ?></textarea>
                     </div>
-                </div>
-            </div>
-            
-            <!-- FAQ Section -->
-            <div class="faq-section">
-                <h2>Frequently Asked Questions</h2>
-                <div class="faq-grid">
-                    <div class="faq-item">
-                        <h3>How can I track my order?</h3>
-                        <p>Once your order ships, you'll receive a tracking number via email. You can also track your order in your account dashboard.</p>
-                    </div>
-                    
-                    <div class="faq-item">
-                        <h3>What is your return policy?</h3>
-                        <p>We offer a 30-day return policy for most items. Items must be in original condition with tags attached.</p>
-                    </div>
-                    
-                    <div class="faq-item">
-                        <h3>Do you ship internationally?</h3>
-                        <p>Yes, we ship to most countries worldwide. Shipping costs and delivery times vary by location.</p>
-                    </div>
-                    
-                    <div class="faq-item">
-                        <h3>How can I change my order?</h3>
-                        <p>You can modify or cancel your order within 1 hour of placing it. After that, please contact our support team.</p>
-                    </div>
-                </div>
+
+                    <button type="submit" class="btn btn-primary btn-block btn-lg">
+                        <i class="fas fa-paper-plane"></i> Send Message
+                    </button>
+                </form>
             </div>
         </div>
-    </section>
+    </div>
+</main>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h3>ShopEasy</h3>
-                    <p>Your trusted online shopping destination for quality products at great prices.</p>
-                </div>
-                <div class="footer-section">
-                    <h4>Quick Links</h4>
-                    <ul>
-                        <li><a href="products.php">All Products</a></li>
-                        <li><a href="about.php">About Us</a></li>
-                        <li><a href="contact.php">Contact</a></li>
-                        <li><a href="faq.php">FAQ</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>Customer Service</h4>
-                    <ul>
-                        <li><a href="shipping.php">Shipping Info</a></li>
-                        <li><a href="returns.php">Returns</a></li>
-                        <li><a href="privacy.php">Privacy Policy</a></li>
-                        <li><a href="terms.php">Terms of Service</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>Connect With Us</h4>
-                    <div class="social-links">
-                        <a href="#"><i class="fab fa-facebook"></i></a>
-                        <a href="#"><i class="fab fa-twitter"></i></a>
-                        <a href="#"><i class="fab fa-instagram"></i></a>
-                        <a href="#"><i class="fab fa-youtube"></i></a>
-                    </div>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; 2024 ShopEasy. All rights reserved.</p>
-            </div>
-        </div>
-    </footer>
-
-    <script src="assets/js/script.js"></script>
-    <script>
-        // Form validation and enhancement
-        document.addEventListener('DOMContentLoaded', function() {
-            const form = document.querySelector('form[data-validate]');
-            const nameInput = document.getElementById('name');
-            const emailInput = document.getElementById('email');
-            const subjectSelect = document.getElementById('subject');
-            const messageTextarea = document.getElementById('message');
-            
-            // Real-time validation
-            nameInput.addEventListener('input', function() {
-                validateField(this, this.value.trim().length >= 2);
-            });
-            
-            emailInput.addEventListener('input', function() {
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                validateField(this, emailRegex.test(this.value));
-            });
-            
-            subjectSelect.addEventListener('change', function() {
-                validateField(this, this.value !== '');
-            });
-            
-            messageTextarea.addEventListener('input', function() {
-                validateField(this, this.value.trim().length >= 10);
-            });
-            
-            // Character counter for message
-            messageTextarea.addEventListener('input', function() {
-                const charCount = this.value.length;
-                const maxLength = 1000;
-                
-                if (!this.nextElementSibling || !this.nextElementSibling.classList.contains('char-counter')) {
-                    const counter = document.createElement('div');
-                    counter.className = 'char-counter';
-                    this.parentNode.appendChild(counter);
-                }
-                
-                const counter = this.nextElementSibling;
-                counter.textContent = `${charCount}/${maxLength} characters`;
-                counter.style.color = charCount > maxLength ? '#e74c3c' : '#666';
-            });
-            
-            function validateField(field, isValid) {
-                if (isValid) {
-                    field.style.borderColor = '#27ae60';
-                    clearFieldError(field);
-                } else {
-                    field.style.borderColor = '#e74c3c';
-                }
-            }
-        });
-        
-        // Auto-resize textarea
-        function autoResize(textarea) {
-            textarea.style.height = 'auto';
-            textarea.style.height = textarea.scrollHeight + 'px';
-        }
-        
-        document.getElementById('message').addEventListener('input', function() {
-            autoResize(this);
-        });
-    </script>
-</body>
-</html>
-
-
-
-
+<?php require_once 'includes/footer.php'; ?>

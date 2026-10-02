@@ -1,23 +1,24 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+header('Content-Type: application/json');
+
 include '../config/database.php';
 include '../includes/functions.php';
-
-header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['success' => false, 'message' => 'Invalid request method']);
     exit();
 }
 
-// Check if user is logged in
 if (!isLoggedIn()) {
-    echo json_encode(['success' => false, 'message' => 'Please login to add items to wishlist']);
+    echo json_encode(['success' => false, 'require_login' => true, 'message' => 'Please login to save items to your wishlist']);
     exit();
 }
 
 $input = json_decode(file_get_contents('php://input'), true);
-$productId = (int)$input['product_id'];
+$productId = (int)($input['product_id'] ?? ($_POST['product_id'] ?? 0));
 $userId = $_SESSION['user_id'];
 
 if ($productId <= 0) {
@@ -25,38 +26,31 @@ if ($productId <= 0) {
     exit();
 }
 
-// Check if product exists
 $product = getProduct($productId);
 if (!$product) {
     echo json_encode(['success' => false, 'message' => 'Product not found']);
     exit();
 }
 
-// Check if item is already in wishlist
-$stmt = $pdo->prepare("SELECT id FROM wishlist WHERE user_id = ? AND product_id = ?");
-$stmt->execute([$userId, $productId]);
-if ($stmt->fetch()) {
-    echo json_encode(['success' => false, 'message' => 'Item already in wishlist']);
-    exit();
-}
-
-// Add to wishlist
-try {
-    $stmt = $pdo->prepare("INSERT INTO wishlist (user_id, product_id, created_at) VALUES (?, ?, NOW())");
-    $stmt->execute([$userId, $productId]);
-    
+// Toggle wishlist
+$isAlready = isInWishlist($userId, $productId);
+if ($isAlready) {
+    removeFromWishlist($userId, $productId);
     echo json_encode([
         'success' => true,
-        'message' => 'Item added to wishlist'
+        'action' => 'removed',
+        'message' => 'Removed "' . htmlspecialchars($product['name']) . '" from your wishlist.',
+        'wishlist_count' => getWishlistCount($userId),
+        'in_wishlist' => false
     ]);
-} catch (Exception $e) {
+} else {
+    addToWishlist($userId, $productId);
     echo json_encode([
-        'success' => false,
-        'message' => 'Error adding to wishlist'
+        'success' => true,
+        'action' => 'added',
+        'message' => 'Saved "' . htmlspecialchars($product['name']) . '" to your wishlist!',
+        'wishlist_count' => getWishlistCount($userId),
+        'in_wishlist' => true
     ]);
 }
 ?>
-
-
-
-

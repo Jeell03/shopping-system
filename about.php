@@ -1,293 +1,157 @@
 <?php
-ob_start(); // Start output buffering for safe redirects
-session_start();
-include 'config/database.php';
-include 'includes/functions.php';
+require_once 'config/database.php';
+require_once 'includes/functions.php';
 
-// Prepare user data for header if logged in
-$isLoggedIn = isLoggedIn();
-$username = $isLoggedIn ? htmlspecialchars($_SESSION['username']) : '';
-$cartCount = getCartCount();
-$wishlistCount = $isLoggedIn ? getWishlistCount($_SESSION['user_id']) : 0;
+$pageTitle = 'About Us - Our Story, Mission & Vision - ShopEasy';
+$activeNav = 'about';
+
+require_once 'includes/header.php';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About Us - ShopEasy</title>
-    <link rel="stylesheet" href="assets/css/style.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        /* Custom styles for the About Us page */
-        .about-section {
-            padding: 4rem 0;
-            background: white;
-        }
 
-        .about-header {
-            text-align: center;
-            margin-bottom: 3rem;
-        }
+<main class="about-page-wrapper" style="padding: 24px 0 60px;">
+    <div class="container">
+        <!-- Breadcrumbs -->
+        <nav class="catalog-breadcrumb" aria-label="breadcrumb">
+            <a href="index.php"><i class="fas fa-home"></i> Home</a>
+            <i class="fas fa-chevron-right"></i>
+            <span>About Us</span>
+        </nav>
 
-        .about-header h1 {
-            color: #2c3e50;
-            margin-bottom: 0.5rem;
-            font-size: 3rem;
-        }
+        <!-- Hero Mission Banner -->
+        <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #2563eb 100%); border-radius: 20px; padding: 60px 40px; color: #ffffff; text-align: center; margin-bottom: 40px; position: relative; overflow: hidden;">
+            <span style="background: rgba(255, 255, 255, 0.15); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 4px 14px; border-radius: 99px; display: inline-block; margin-bottom: 16px;">
+                <i class="fas fa-gem"></i> Built with Passion & Integrity
+            </span>
+            <h1 style="font-family: 'Poppins', sans-serif; font-size: 36px; font-weight: 800; max-width: 800px; margin: 0 auto 16px; line-height: 1.25;">
+                Reinventing the Online Shopping Experience for Everyday People
+            </h1>
+            <p style="font-size: 16px; opacity: 0.9; max-width: 680px; margin: 0 auto 28px; line-height: 1.6;">
+                ShopEasy was founded with a singular ambition: eliminate unnecessary middlemen markups, ensure 100% genuine products, and deliver delightful shopping moments right to your doorstep.
+            </p>
+            <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                <a href="products.php" class="btn btn-accent btn-lg"><i class="fas fa-shopping-bag"></i> Explore Our Catalog</a>
+                <a href="contact.php" class="btn btn-outline btn-lg" style="color: #fff; border-color: rgba(255,255,255,0.4);"><i class="fas fa-envelope"></i> Contact Us</a>
+            </div>
+        </div>
 
-        .about-header p {
-            color: #666;
-            font-size: 1.2rem;
-            max-width: 800px;
-            margin: 0 auto;
-        }
+        <!-- Key Stats Counter Strip -->
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 48px;">
+            <div style="background: #ffffff; border-radius: 14px; border: 1px solid #e2e8f0; padding: 24px; text-align: center; box-shadow: var(--shadow-xs);">
+                <div style="font-size: 32px; font-weight: 800; color: #2563eb; margin-bottom: 4px;">50,000+</div>
+                <div style="font-size: 13px; font-weight: 600; color: #475569;">Curated Products</div>
+            </div>
+            <div style="background: #ffffff; border-radius: 14px; border: 1px solid #e2e8f0; padding: 24px; text-align: center; box-shadow: var(--shadow-xs);">
+                <div style="font-size: 32px; font-weight: 800; color: #10b981; margin-bottom: 4px;">2 Million+</div>
+                <div style="font-size: 13px; font-weight: 600; color: #475569;">Satisfied Shoppers</div>
+            </div>
+            <div style="background: #ffffff; border-radius: 14px; border: 1px solid #e2e8f0; padding: 24px; text-align: center; box-shadow: var(--shadow-xs);">
+                <div style="font-size: 32px; font-weight: 800; color: #ea580c; margin-bottom: 4px;">99.8%</div>
+                <div style="font-size: 13px; font-weight: 600; color: #475569;">On-Time Delivery</div>
+            </div>
+            <div style="background: #ffffff; border-radius: 14px; border: 1px solid #e2e8f0; padding: 24px; text-align: center; box-shadow: var(--shadow-xs);">
+                <div style="font-size: 32px; font-weight: 800; color: #8b5cf6; margin-bottom: 4px;">24 / 7</div>
+                <div style="font-size: 13px; font-weight: 600; color: #475569;">Expert Support</div>
+            </div>
+        </div>
 
-        .story-section {
-            display: flex;
-            align-items: center;
-            gap: 4rem;
-            margin-bottom: 4rem;
-            padding: 2rem;
-            background: #f8f9fa;
-            border-radius: 10px;
-        }
-
-        .story-content {
-            flex: 1;
-        }
-
-        .story-image {
-            flex: 1;
-            max-width: 50%;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-        }
-
-        .story-image img {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
-        
-        .story-content h2 {
-            color: #3498db;
-            margin-bottom: 1rem;
-            font-size: 2rem;
-        }
-
-        .story-content p {
-            line-height: 1.7;
-            margin-bottom: 1rem;
-            color: #555;
-        }
-
-        .mission-values {
-            text-align: center;
-            margin-bottom: 4rem;
-        }
-
-        .mission-values h2 {
-            color: #2c3e50;
-            margin-bottom: 2rem;
-            font-size: 2.5rem;
-        }
-
-        .values-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
-        }
-
-        .value-card {
-            background: #fff;
-            padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-            text-align: center;
-            border-top: 5px solid #3498db;
-        }
-
-        .value-card i {
-            font-size: 2.5rem;
-            color: #3498db;
-            margin-bottom: 1rem;
-        }
-
-        .value-card h3 {
-            color: #2c3e50;
-            margin-bottom: 0.5rem;
-        }
-        
-        /* Responsive Design */
-        @media (max-width: 992px) {
-            .story-section {
-                flex-direction: column;
-                gap: 2rem;
-                padding: 1.5rem;
-            }
-            .story-image {
-                max-width: 100%;
-                order: -1; /* Image appears first on mobile */
-            }
-            .values-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
-</head>
-<body>
-    <header class="header">
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">
-                    <h1><a href="index.php">ShopEasy</a></h1>
-                </div>
-                
-                <div class="search-bar">
-                    <form action="search.php" method="GET">
-                        <input type="text" name="query" placeholder="Search products..." required>
-                        <button type="submit"><i class="fas fa-search"></i></button>
-                    </form>
-                </div>
-                
-                <div class="header-actions">
-                    <div class="user-menu">
-                        <?php if ($isLoggedIn): ?>
-                            <a href="profile.php" class="user-link">
-                                <i class="fas fa-user"></i>
-                                <?php echo $username; ?>
-                            </a>
-                            <a href="logout.php" class="logout-link">Logout</a>
-                        <?php else: ?>
-                            <a href="login.php" class="login-link">Login</a>
-                            <a href="register.php" class="register-link">Register</a>
-                        <?php endif; ?>
+        <!-- The Genesis Story -->
+        <div style="background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 40px; margin-bottom: 40px; box-shadow: var(--shadow-sm);">
+            <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 40px; align-items: center;">
+                <div>
+                    <span style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: #2563eb; letter-spacing: 0.5px;">Our Journey</span>
+                    <h2 style="font-family: 'Poppins', sans-serif; font-size: 26px; font-weight: 800; color: #0f172a; margin: 6px 0 16px;">
+                        From Humble Beginnings to National Retail Benchmark
+                    </h2>
+                    <p style="font-size: 14px; color: #475569; line-height: 1.7; margin-bottom: 14px;">
+                        It all started in 2020 with a simple observation: shoppers spent hours comparing prices across confusing websites with uncertain authenticity guarantees. We created ShopEasy as a curated platform where each product undergoes stringent quality verification before reaching catalog shelves.
+                    </p>
+                    <p style="font-size: 14px; color: #475569; line-height: 1.7; margin-bottom: 20px;">
+                        Whether you are shopping for top-tier smartphones, durable denim, kitchen culinary appliances, or high-performance running shoes, ShopEasy guarantees direct brand sourcing, transparent pricing, and instant returns.
+                    </p>
+                    <div style="display: flex; gap: 14px;">
+                        <a href="products.php?on_sale=1" class="btn btn-primary btn-sm"><i class="fas fa-fire"></i> Today's Deals</a>
+                        <a href="shipping.php" class="btn btn-outline btn-sm"><i class="fas fa-truck"></i> Shipping Information</a>
                     </div>
-                    
-                    <div class="header-icons">
-                        <?php if ($isLoggedIn): ?>
-                            <a href="wishlist.php" class="wishlist-link">
-                                <i class="fas fa-heart"></i>
-                                <span class="wishlist-count"><?php echo $wishlistCount; ?></span>
-                            </a>
-                        <?php endif; ?>
-                        
-                        <a href="cart.php" class="cart-link">
-                            <i class="fas fa-shopping-cart"></i>
-                            <span class="cart-count"><?php echo $cartCount; ?></span>
-                        </a>
+                </div>
+
+                <div style="background: #f8fafc; border-radius: 16px; padding: 28px; border: 1px solid #e2e8f0;">
+                    <div style="display: flex; flex-direction: column; gap: 18px;">
+                        <div style="display: flex; gap: 14px; align-items: center;">
+                            <div style="width: 44px; height: 44px; border-radius: 10px; background: #eff6ff; color: #2563eb; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <div>
+                                <h4 style="font-size: 14px; font-weight: 700; color: #0f172a; margin: 0 0 2px;">100% Verified Sourcing</h4>
+                                <span style="font-size: 12px; color: #64748b;">Direct manufacturer partnerships with brand warranties</span>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 14px; align-items: center;">
+                            <div style="width: 44px; height: 44px; border-radius: 10px; background: #ecfdf5; color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                                <i class="fas fa-sync-alt"></i>
+                            </div>
+                            <div>
+                                <h4 style="font-size: 14px; font-weight: 700; color: #0f172a; margin: 0 0 2px;">No-Questions-Asked Returns</h4>
+                                <span style="font-size: 12px; color: #64748b;">7-day doorstep pickup and immediate refunds</span>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 14px; align-items: center;">
+                            <div style="width: 44px; height: 44px; border-radius: 10px; background: #fef3c7; color: #d97706; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                                <i class="fas fa-lock"></i>
+                            </div>
+                            <div>
+                                <h4 style="font-size: 14px; font-weight: 700; color: #0f172a; margin: 0 0 2px;">256-Bit SSL Payment Protection</h4>
+                                <span style="font-size: 12px; color: #64748b;">Encrypted checkout supporting Cards, UPI, and Cash on Delivery</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            
-            <nav class="main-nav">
-                <ul>
-                    <li><a href="index.php">Home</a></li>
-                    <li><a href="products.php">All Products</a></li>
-                    <li><a href="products.php?category=electronics">Electronics</a></li>
-                    <li><a href="products.php?category=clothing">Clothing</a></li>
-                    <li><a href="products.php?category=home">Home & Garden</a></li>
-                    <li><a href="products.php?category=sports">Sports</a></li>
-                    <li><a href="contact.php">Contact</a></li>
-                </ul>
-            </nav>
         </div>
-    </header>
-    
-    <div class="breadcrumb">
-        <div class="container">
-            <a href="index.php">Home</a> > 
-            <span>About Us</span>
+
+        <!-- Core Values Grid -->
+        <div style="margin-bottom: 20px;">
+            <div style="text-align: center; margin-bottom: 28px;">
+                <h2 style="font-family: 'Poppins', sans-serif; font-size: 24px; font-weight: 800; color: #0f172a; margin-bottom: 6px;">
+                    Our Guiding Core Principles
+                </h2>
+                <p style="font-size: 13px; color: #64748b;">The pillars that drive every decision at ShopEasy</p>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;">
+                <div style="background: #ffffff; border-radius: 14px; border: 1px solid #e2e8f0; padding: 28px; text-align: center; box-shadow: var(--shadow-xs);">
+                    <div style="width: 52px; height: 52px; border-radius: 12px; background: #eff6ff; color: #2563eb; display: flex; align-items: center; justify-content: center; font-size: 22px; margin: 0 auto 16px;">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <h3 style="font-size: 16px; font-weight: 700; color: #0f172a; margin-bottom: 8px;">Customer Centricity</h3>
+                    <p style="font-size: 13px; color: #64748b; line-height: 1.6;">
+                        Your satisfaction is our primary metric. From easy website navigation to express delivery, every detail is refined for you.
+                    </p>
+                </div>
+
+                <div style="background: #ffffff; border-radius: 14px; border: 1px solid #e2e8f0; padding: 28px; text-align: center; box-shadow: var(--shadow-xs);">
+                    <div style="width: 52px; height: 52px; border-radius: 12px; background: #ecfdf5; color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 22px; margin: 0 auto 16px;">
+                        <i class="fas fa-award"></i>
+                    </div>
+                    <h3 style="font-size: 16px; font-weight: 700; color: #0f172a; margin-bottom: 8px;">Uncompromised Quality</h3>
+                    <p style="font-size: 13px; color: #64748b; line-height: 1.6;">
+                        We partner only with recognized brands and verified suppliers to guarantee authentic hardware and certified standards.
+                    </p>
+                </div>
+
+                <div style="background: #ffffff; border-radius: 14px; border: 1px solid #e2e8f0; padding: 28px; text-align: center; box-shadow: var(--shadow-xs);">
+                    <div style="width: 52px; height: 52px; border-radius: 12px; background: #fdf2f8; color: #ec4899; display: flex; align-items: center; justify-content: center; font-size: 22px; margin: 0 auto 16px;">
+                        <i class="fas fa-leaf"></i>
+                    </div>
+                    <h3 style="font-size: 16px; font-weight: 700; color: #0f172a; margin-bottom: 8px;">Sustainable Logistics</h3>
+                    <p style="font-size: 13px; color: #64748b; line-height: 1.6;">
+                        We continuously optimize packaging waste using recyclable cardboard cartons and eco-friendly protective wrapping.
+                    </p>
+                </div>
+            </div>
         </div>
     </div>
+</main>
 
-    <section class="about-section">
-        <div class="container">
-            <div class="about-header">
-                <h1>Our Story</h1>
-                <p>ShopEasy was founded on the principle of making high-quality products accessible to everyone, everywhere, with ease and trust.</p>
-            </div>
-
-            <div class="story-section">
-                <div class="story-content">
-                    <h2>The Genesis of ShopEasy</h2>
-                    <p>It all began in 2020 with a simple idea: cut out the complexity of online shopping. We started small, focusing on hand-selecting durable and innovative products in the Electronics and Home categories. Since then, we've grown into a trusted marketplace, but our commitment to a simple, enjoyable shopping experience remains our north star.</p>
-                    <p>We believe that finding exactly what you need shouldn't require navigating endless menus or worrying about authenticity. Every product you see here is backed by our promise of quality and value.</p>
-                    <a href="contact.php" class="btn btn-primary">Contact Our Team</a>
-                </div>
-                <div class="story-image">
-                    <img src="Image/about-story-office.jpg" alt="A modern, collaborative office setting">
-                </div>
-            </div>
-
-            <div class="mission-values">
-                <h2>Our Mission & Core Values</h2>
-                <div class="values-grid">
-                    <div class="value-card">
-                        <i class="fas fa-hands-helping"></i>
-                        <h3>Customer Trust</h3>
-                        <p>We prioritize transparency, security, and exceptional support to earn your trust with every transaction.</p>
-                    </div>
-                    <div class="value-card">
-                        <i class="fas fa-box-open"></i>
-                        <h3>Quality Products</h3>
-                        <p>We meticulously select our inventory, ensuring every item meets a high standard of durability and innovation.</p>
-                    </div>
-                    <div class="value-card">
-                        <i class="fas fa-leaf"></i>
-                        <h3>Sustainability</h3>
-                        <p>We are dedicated to sustainable practices, from our packaging choices to supporting eco-friendly brands.</p>
-                    </div>
-                </div>
-            </div>
-            
-        </div>
-    </section>
-
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h3>ShopEasy</h3>
-                    <p>Your trusted online shopping destination for quality products at great prices.</p>
-                </div>
-                <div class="footer-section">
-                    <h4>Quick Links</h4>
-                    <ul>
-                        <li><a href="products.php">All Products</a></li>
-                        <li><a href="about.php">About Us</a></li>
-                        <li><a href="contact.php">Contact</a></li>
-                        <li><a href="faq.php">FAQ</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>Customer Service</h4>
-                    <ul>
-                        <li><a href="shipping.php">Shipping Info</a></li>
-                        <li><a href="returns.php">Returns</a></li>
-                        <li><a href="privacy.php">Privacy Policy</a></li>
-                        <li><a href="terms.php">Terms of Service</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>Connect With Us</h4>
-                    <div class="social-links">
-                        <a href="#"><i class="fab fa-facebook"></i></a>
-                        <a href="#"><i class="fab fa-twitter"></i></a>
-                        <a href="#"><i class="fab fa-instagram"></i></a>
-                        <a href="#"><i class="fab fa-youtube"></i></a>
-                    </div>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; 2024 ShopEasy. All rights reserved.</p>
-            </div>
-        </div>
-    </footer>
-
-    <script src="assets/js/script.js"></script>
-</body>
-</html>
+<?php require_once 'includes/footer.php'; ?>

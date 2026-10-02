@@ -1,23 +1,24 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+header('Content-Type: application/json');
+
 include '../config/database.php';
 include '../includes/functions.php';
-
-header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['success' => false, 'message' => 'Invalid request method']);
     exit();
 }
 
-// Check if user is logged in
 if (!isLoggedIn()) {
-    echo json_encode(['success' => false, 'message' => 'Please login to manage wishlist']);
+    echo json_encode(['success' => false, 'message' => 'Please login']);
     exit();
 }
 
 $input = json_decode(file_get_contents('php://input'), true);
-$productId = (int)$input['product_id'];
+$productId = (int)($input['product_id'] ?? ($_POST['product_id'] ?? 0));
 $userId = $_SESSION['user_id'];
 
 if ($productId <= 0) {
@@ -25,30 +26,11 @@ if ($productId <= 0) {
     exit();
 }
 
-// Remove from wishlist
-try {
-    $stmt = $pdo->prepare("DELETE FROM wishlist WHERE user_id = ? AND product_id = ?");
-    $stmt->execute([$userId, $productId]);
-    
-    if ($stmt->rowCount() > 0) {
-        echo json_encode([
-            'success' => true,
-            'message' => 'Item removed from wishlist'
-        ]);
-    } else {
-        echo json_encode([
-            'success' => false,
-            'message' => 'Item not found in wishlist'
-        ]);
-    }
-} catch (Exception $e) {
-    echo json_encode([
-        'success' => false,
-        'message' => 'Error removing from wishlist'
-    ]);
-}
+removeFromWishlist($userId, $productId);
+
+echo json_encode([
+    'success' => true,
+    'message' => 'Item removed from wishlist',
+    'wishlist_count' => getWishlistCount($userId)
+]);
 ?>
-
-
-
-

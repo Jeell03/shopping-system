@@ -1,439 +1,219 @@
 <?php
-ob_start();
-session_start();
-include 'config/database.php';
-include 'includes/functions.php';
+require_once 'config/database.php';
+require_once 'includes/functions.php';
 
-$cartItems = getCartItems();
-$cartTotal = getCartTotal();
+$cartBreakdown = getCartBreakdown();
+$pageTitle = 'Shopping Cart (' . $cartBreakdown['item_count'] . ' items) - ShopEasy';
+$activeNav = 'cart';
 
-// Handle cart updates
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['update_cart'])) {
-        foreach ($_POST['quantity'] as $productId => $quantity) {
-            updateCartQuantity($productId, (int)$quantity);
-        }
-        redirect('cart.php');
-    } elseif (isset($_POST['remove_item'])) {
-        $productId = (int)$_POST['product_id'];
-        removeFromCart($productId);
-        redirect('cart.php');
-    } elseif (isset($_POST['clear_cart'])) {
-        $_SESSION['cart'] = [];
-        redirect('cart.php');
-    }
-}
+require_once 'includes/header.php';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shopping Cart - ShopEasy</title>
-    <link rel="stylesheet" href="assets/css/style.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-</head>
-<body>
-    <!-- Header -->
-    <header class="header">
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">
-                    <h1><a href="index.php">ShopEasy</a></h1>
+
+<main class="cart-page-container" style="padding: 24px 0 50px;">
+    <div class="container">
+        <!-- Breadcrumbs -->
+        <nav class="catalog-breadcrumb" aria-label="breadcrumb">
+            <a href="index.php"><i class="fas fa-home"></i> Home</a>
+            <i class="fas fa-chevron-right"></i>
+            <span>Shopping Cart</span>
+        </nav>
+
+        <h1 style="font-family: 'Poppins', sans-serif; font-size: 24px; font-weight: 700; color: #0f172a; margin-bottom: 20px;">
+            Shopping Cart <span style="font-size: 16px; color: #64748b; font-weight: 500;">(<?php echo $cartBreakdown['item_count']; ?> items)</span>
+        </h1>
+
+        <?php if (empty($cartBreakdown['items'])): ?>
+            <!-- Empty Cart State -->
+            <div style="background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 60px 20px; text-align: center; max-width: 680px; margin: 20px auto;">
+                <div style="width: 80px; height: 80px; background: #eff6ff; color: #2563eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; margin: 0 auto 18px;">
+                    <i class="fas fa-shopping-bag"></i>
                 </div>
-                
-                <div class="search-bar">
-                    <form action="search.php" method="GET">
-                        <input type="text" name="query" placeholder="Search products..." required>
-                        <button type="submit"><i class="fas fa-search"></i></button>
-                    </form>
-                </div>
-                
-                <div class="header-actions">
-                    <div class="user-menu">
-                        <?php if (isset($_SESSION['user_id'])): ?>
-                            <a href="profile.php" class="user-link">
-                                <i class="fas fa-user"></i>
-                                <?php echo htmlspecialchars($_SESSION['username']); ?>
-                            </a>
-                            <a href="logout.php" class="logout-link">Logout</a>
-                        <?php else: ?>
-                            <a href="login.php" class="login-link">Login</a>
-                            <a href="register.php" class="register-link">Register</a>
-                        <?php endif; ?>
-                    </div>
-                    
-                    <div class="cart">
-                        <a href="cart.php" class="cart-link active">
-                            <i class="fas fa-shopping-cart"></i>
-                            <span class="cart-count"><?php echo getCartCount(); ?></span>
-                        </a>
-                    </div>
+                <h2 style="font-size: 22px; font-weight: 700; color: #0f172a; margin-bottom: 8px;">Your Shopping Cart is Empty</h2>
+                <p style="color: #64748b; font-size: 14px; margin-bottom: 24px;">Explore our best deals, discover trending gadgets, and add items to your cart.</p>
+                <div style="display: flex; gap: 12px; justify-content: center;">
+                    <a href="products.php" class="btn btn-primary"><i class="fas fa-th-large"></i> Continue Shopping</a>
+                    <a href="products.php?on_sale=1" class="btn btn-accent"><i class="fas fa-fire"></i> Today's Deals</a>
                 </div>
             </div>
-            
-            <nav class="main-nav">
-                <ul>
-                    <li><a href="index.php">Home</a></li>
-                    <li><a href="products.php">All Products</a></li>
-                    <li><a href="products.php?category=electronics">Electronics</a></li>
-                    <li><a href="products.php?category=clothing">Clothing</a></li>
-                    <li><a href="products.php?category=home">Home & Garden</a></li>
-                    <li><a href="products.php?category=sports">Sports</a></li>
-                    <li><a href="contact.php">Contact</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+        <?php else: ?>
+            <div class="cart-split-layout">
+                <!-- Left Column: Cart Items -->
+                <div class="cart-items-card">
+                    <div class="cart-card-header">
+                        <span style="font-weight: 700; font-size: 16px; color: #0f172a;">Items in Cart</span>
+                        <span style="font-size: 13px; color: #64748b;">Price</span>
+                    </div>
 
-    <!-- Breadcrumb -->
-    <div class="breadcrumb">
-        <div class="container">
-            <a href="index.php">Home</a> > 
-            <span>Shopping Cart</span>
-        </div>
-    </div>
+                    <div class="cart-items-list">
+                        <?php foreach ($cartBreakdown['items'] as $item): ?>
+                        <?php 
+                            $p = $item['product'];
+                            $pImg = getProductImageUrl($p['image']);
+                        ?>
+                        <div class="cart-item-row" id="cartRow_<?php echo $p['id']; ?>">
+                            <!-- Thumbnail -->
+                            <div class="cart-item-thumb">
+                                <a href="product.php?id=<?php echo $p['id']; ?>">
+                                    <img src="<?php echo $pImg; ?>" alt="<?php echo htmlspecialchars($p['name']); ?>">
+                                </a>
+                            </div>
 
-    <!-- Cart Section -->
-    <section class="cart-section">
-        <div class="container">
-            <h1>Shopping Cart</h1>
-            
-            <?php if (empty($cartItems)): ?>
-                <div class="empty-cart">
-                    <i class="fas fa-shopping-cart"></i>
-                    <h2>Your cart is empty</h2>
-                    <p>Looks like you haven't added any items to your cart yet.</p>
-                    <a href="products.php" class="btn btn-primary">Continue Shopping</a>
-                </div>
-            <?php else: ?>
-                <form method="POST" class="cart-form">
-                    <div class="cart-items">
-                        <?php foreach ($cartItems as $item): ?>
-                            <div class="cart-item" data-product-id="<?php echo $item['product']['id']; ?>">
-                                <div class="cart-item-image">
-                                    <img src="<?php echo $item['product']['image']; ?>" alt="<?php echo htmlspecialchars($item['product']['name']); ?>">
+                            <!-- Details -->
+                            <div class="cart-item-info">
+                                <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #2563eb;">
+                                    <?php echo htmlspecialchars($p['category_name'] ?? 'ShopEasy'); ?>
+                                </span>
+                                <h3 class="cart-item-title">
+                                    <a href="product.php?id=<?php echo $p['id']; ?>"><?php echo htmlspecialchars($p['name']); ?></a>
+                                </h3>
+
+                                <div style="font-size: 12px; color: <?php echo $p['stock_quantity'] > 0 ? '#10b981' : '#ef4444'; ?>; font-weight: 600;">
+                                    <?php echo $p['stock_quantity'] > 0 ? 'In Stock &bull; Eligible for Free Shipping' : 'Currently Out of Stock'; ?>
                                 </div>
-                                
-                                <div class="cart-item-info">
-                                    <h3><?php echo htmlspecialchars($item['product']['name']); ?></h3>
-                                    <p class="cart-item-price">$<?php echo number_format($item['product']['price'], 2); ?></p>
-                                    
-                                    <div class="quantity-controls">
-                                        <label for="quantity_<?php echo $item['product']['id']; ?>">Quantity:</label>
-                                        <button type="button" onclick="decreaseQuantity(<?php echo $item['product']['id']; ?>)">-</button>
-                                        <input type="number" 
-                                               id="quantity_<?php echo $item['product']['id']; ?>" 
-                                               name="quantity[<?php echo $item['product']['id']; ?>]" 
-                                               value="<?php echo $item['quantity']; ?>" 
-                                               min="1" 
-                                               max="<?php echo $item['product']['stock_quantity']; ?>"
-                                               onchange="updateCartItem(<?php echo $item['product']['id']; ?>)">
-                                        <button type="button" onclick="increaseQuantity(<?php echo $item['product']['id']; ?>)">+</button>
-                                    </div>
-                                    
-                                    <div class="item-total">
-                                        Total: $<?php echo number_format($item['product']['price'] * $item['quantity'], 2); ?>
-                                    </div>
-                                </div>
-                                
+
+                                <!-- Actions & Quantity Stepper -->
                                 <div class="cart-item-actions">
-                                    <button type="button" 
-                                            class="btn btn-outline btn-small remove-item-btn" 
-                                            data-product-id="<?php echo $item['product']['id']; ?>"
-                                            onclick="removeCartItem(<?php echo $item['product']['id']; ?>)">
-                                        <i class="fas fa-trash"></i>
-                                        Remove
-                                    </button>
+                                    <div class="qty-stepper" style="height: 34px;">
+                                        <button type="button" class="qty-step-btn cart-qty-minus" data-product-id="<?php echo $p['id']; ?>">-</button>
+                                        <input type="text" id="cartQty_<?php echo $p['id']; ?>" class="qty-input" value="<?php echo $item['quantity']; ?>" readonly style="width: 36px; font-size: 13px;">
+                                        <button type="button" class="qty-step-btn cart-qty-plus" data-product-id="<?php echo $p['id']; ?>">+</button>
+                                    </div>
+
+                                    <span class="cart-action-link" onclick="saveForLaterAjax(<?php echo $p['id']; ?>);">
+                                        <i class="far fa-heart"></i> Save for Later
+                                    </span>
+                                    <span style="color: #cbd5e1;">|</span>
+                                    <span class="cart-action-link delete-link" onclick="removeCartItemAjax(<?php echo $p['id']; ?>)">
+                                        <i class="far fa-trash-alt"></i> Delete
+                                    </span>
                                 </div>
                             </div>
+
+                            <!-- Price -->
+                            <div class="cart-item-price-col">
+                                <div class="cart-item-total-price">$<?php echo number_format($item['subtotal'], 2); ?></div>
+                                <?php if ($item['quantity'] > 1): ?>
+                                    <div class="cart-item-unit-price">($<?php echo number_format($item['unit_price'], 2); ?> each)</div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
                         <?php endforeach; ?>
                     </div>
-                    
-                    <div class="cart-actions">
-                        <button type="submit" name="update_cart" class="btn btn-outline">
-                            <i class="fas fa-sync"></i>
-                            Update Cart
-                        </button>
-                        
-                        <button type="submit" name="clear_cart" class="btn btn-outline" 
-                                onclick="return confirm('Clear all items from cart?')">
-                            <i class="fas fa-trash-alt"></i>
-                            Clear Cart
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 20px;">
+                        <a href="products.php" class="btn btn-outline btn-sm">
+                            <i class="fas fa-arrow-left"></i> Add More Products
+                        </a>
+                        <button type="button" class="btn btn-outline btn-sm" onclick="clearCartAjax()">
+                            Clear Entire Cart
                         </button>
                     </div>
-                </form>
-                
-                <div class="cart-summary">
-                    <div class="summary-card">
-                        <h3>Order Summary</h3>
-                        
-                        <div class="summary-row">
-                            <span>Subtotal:</span>
-                            <span>$<?php echo number_format($cartTotal, 2); ?></span>
-                        </div>
-                        
-                        <div class="summary-row">
-                            <span>Shipping:</span>
-                            <span><?php echo $cartTotal >= 50 ? 'FREE' : '$9.99'; ?></span>
-                        </div>
-                        
-                        <div class="summary-row">
-                            <span>Tax:</span>
-                            <span>$<?php echo number_format($cartTotal * 0.08, 2); ?></span>
-                        </div>
-                        
-                        <div class="summary-row total">
-                            <span>Total:</span>
-                            <span>$<?php echo number_format($cartTotal + ($cartTotal >= 50 ? 0 : 9.99) + ($cartTotal * 0.08), 2); ?></span>
-                        </div>
-                        
-                        <div class="checkout-actions">
-                            <a href="checkout.php" class="btn btn-primary btn-large">
-                                <i class="fas fa-credit-card"></i>
-                                Proceed to Checkout
-                            </a>
-                            
-                            <a href="products.php" class="btn btn-outline">
-                                <i class="fas fa-arrow-left"></i>
-                                Continue Shopping
-                            </a>
-                        </div>
-                        
-                        <?php if ($cartTotal < 50): ?>
-                            <div class="shipping-notice">
-                                <i class="fas fa-info-circle"></i>
-                                Add $<?php echo number_format(50 - $cartTotal, 2); ?> more for free shipping!
+                </div>
+
+                <!-- Right Column: Order Summary Sidebar -->
+                <div class="cart-summary-card">
+                    <!-- Free Delivery Progress Bar (Amazon Pattern) -->
+                    <div class="free-shipping-progress-box">
+                        <?php if ($cartBreakdown['is_free_shipping']): ?>
+                            <div class="free-shipping-msg">
+                                <i class="fas fa-check-circle" style="color: #10b981;"></i> Your order qualifies for <strong>FREE Delivery!</strong>
+                            </div>
+                            <div class="progress-bar-bg" style="height: 6px; background: #a7f3d0;">
+                                <div class="progress-bar-fill" style="width: 100%; background: #10b981;"></div>
+                            </div>
+                        <?php else: ?>
+                            <div class="free-shipping-msg">
+                                <i class="fas fa-truck"></i> Add <strong>$<?php echo number_format($cartBreakdown['amount_needed_for_free_shipping'], 2); ?></strong> more to get <strong>FREE Delivery!</strong>
+                            </div>
+                            <?php 
+                                $pct = min(100, round(($cartBreakdown['subtotal'] / $cartBreakdown['free_shipping_threshold']) * 100));
+                            ?>
+                            <div class="progress-bar-bg" style="height: 6px;">
+                                <div class="progress-bar-fill" style="width: <?php echo $pct; ?>%; background: #2563eb;"></div>
                             </div>
                         <?php endif; ?>
                     </div>
-                </div>
-            <?php endif; ?>
-        </div>
-    </section>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h3>ShopEasy</h3>
-                    <p>Your trusted online shopping destination for quality products at great prices.</p>
-                </div>
-                <div class="footer-section">
-                    <h4>Quick Links</h4>
-                    <ul>
-                        <li><a href="products.php">All Products</a></li>
-                        <li><a href="about.php">About Us</a></li>
-                        <li><a href="contact.php">Contact</a></li>
-                        <li><a href="faq.php">FAQ</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>Customer Service</h4>
-                    <ul>
-                        <li><a href="shipping.php">Shipping Info</a></li>
-                        <li><a href="returns.php">Returns</a></li>
-                        <li><a href="privacy.php">Privacy Policy</a></li>
-                        <li><a href="terms.php">Terms of Service</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>Connect With Us</h4>
-                    <div class="social-links">
-                        <a href="#"><i class="fab fa-facebook"></i></a>
-                        <a href="#"><i class="fab fa-twitter"></i></a>
-                        <a href="#"><i class="fab fa-instagram"></i></a>
-                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    <h3 style="font-size: 16px; font-weight: 700; color: #0f172a; margin-bottom: 16px;">Price Details</h3>
+
+                    <!-- Coupon Applicator Input -->
+                    <div class="coupon-box-wrapper">
+                        <?php if (!empty($cartBreakdown['applied_coupon'])): ?>
+                            <div class="applied-coupon-pill">
+                                <div>
+                                    <i class="fas fa-tag"></i> <strong><?php echo htmlspecialchars($cartBreakdown['applied_coupon']['code']); ?></strong> applied!
+                                </div>
+                                <button type="button" onclick="removeCouponAjax()" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 12px; font-weight: 700;">
+                                    Remove
+                                </button>
+                            </div>
+                        <?php else: ?>
+                            <div class="coupon-applicator-group">
+                                <input type="text" id="couponCodeInput" placeholder="Enter Promo Code" maxlength="15">
+                                <button type="button" class="btn btn-primary btn-sm" onclick="applyCouponAjax()">Apply</button>
+                            </div>
+                            <div style="font-size: 11px; color: #64748b; margin-top: -10px; margin-bottom: 16px;">
+                                Try: <strong style="color: #2563eb; cursor: pointer;" onclick="document.getElementById('couponCodeInput').value='WELCOME10'; applyCouponAjax();">WELCOME10</strong> (10% OFF) or <strong style="color: #2563eb; cursor: pointer;" onclick="document.getElementById('couponCodeInput').value='SAVE50'; applyCouponAjax();">SAVE50</strong>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- Price Calculations Breakdown -->
+                    <div class="summary-line-item">
+                        <span>Price (<?php echo $cartBreakdown['item_count']; ?> items):</span>
+                        <span>$<?php echo number_format($cartBreakdown['mrp_total'], 2); ?></span>
+                    </div>
+
+                    <?php if ($cartBreakdown['mrp_total'] > $cartBreakdown['subtotal']): ?>
+                    <div class="summary-line-item discount-item">
+                        <span>Store Catalog Discount:</span>
+                        <span>-$<?php echo number_format($cartBreakdown['mrp_total'] - $cartBreakdown['subtotal'], 2); ?></span>
+                    </div>
+                    <?php endif; ?>
+
+                    <?php if ($cartBreakdown['discount'] > 0): ?>
+                    <div class="summary-line-item discount-item">
+                        <span>Coupon Discount:</span>
+                        <span>-$<?php echo number_format($cartBreakdown['discount'], 2); ?></span>
+                    </div>
+                    <?php endif; ?>
+
+                    <div class="summary-line-item">
+                        <span>Estimated Tax (5%):</span>
+                        <span>$<?php echo number_format($cartBreakdown['tax'], 2); ?></span>
+                    </div>
+
+                    <div class="summary-line-item">
+                        <span>Delivery Charges:</span>
+                        <span>
+                            <?php echo $cartBreakdown['shipping'] == 0 ? '<strong style="color: #10b981;">FREE</strong>' : '$'.number_format($cartBreakdown['shipping'], 2); ?>
+                        </span>
+                    </div>
+
+                    <div class="summary-line-item summary-total-line">
+                        <span>Total Amount:</span>
+                        <span>$<?php echo number_format($cartBreakdown['total'], 2); ?></span>
+                    </div>
+
+                    <?php if ($cartBreakdown['total_savings'] > 0): ?>
+                        <div class="savings-banner-green">
+                            <i class="fas fa-piggy-bank"></i> You will save <strong>$<?php echo number_format($cartBreakdown['total_savings'], 2); ?></strong> on this order!
+                        </div>
+                    <?php endif; ?>
+
+                    <!-- Proceed to Checkout Button -->
+                    <a href="checkout.php" class="btn btn-accent btn-lg btn-block" style="margin-top: 14px;">
+                        Proceed to Checkout <i class="fas fa-arrow-right"></i>
+                    </a>
+
+                    <!-- Security Strip -->
+                    <div style="text-align: center; margin-top: 16px; font-size: 11px; color: #94a3b8; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <i class="fas fa-shield-alt" style="color: #10b981;"></i> Safe and Secure Payments. 100% Authentic products.
                     </div>
                 </div>
             </div>
-            <div class="footer-bottom">
-                <p>&copy; 2024 ShopEasy. All rights reserved.</p>
-            </div>
-        </div>
-    </footer>
+        <?php endif; ?>
+    </div>
+</main>
 
-    <script src="assets/js/script.js"></script>
-    <script>
-        function increaseQuantity(productId) {
-            const input = document.getElementById('quantity_' + productId);
-            const max = parseInt(input.getAttribute('max'));
-            const current = parseInt(input.value);
-            if (current < max) {
-                input.value = current + 1;
-                updateCartItem(productId);
-            }
-        }
-        
-        function decreaseQuantity(productId) {
-            const input = document.getElementById('quantity_' + productId);
-            const current = parseInt(input.value);
-            if (current > 1) {
-                input.value = current - 1;
-                updateCartItem(productId);
-            }
-        }
-        
-        function updateCartItem(productId) {
-            const input = document.getElementById('quantity_' + productId);
-            const quantity = parseInt(input.value);
-            
-            if (quantity < 1) {
-                if (confirm('Remove this item from cart?')) {
-                    removeCartItem(productId);
-                } else {
-                    input.value = 1;
-                }
-            } else {
-                // Update quantity via AJAX
-                fetch('ajax/update_cart_quantity.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        product_id: productId,
-                        quantity: quantity
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        updateCartCount(data.cart_count);
-                        updateCartTotal(data.cart_total);
-                        // Update the item total display
-                        const itemTotal = document.querySelector(`[data-product-id="${productId}"]`).closest('.cart-item').querySelector('.item-total');
-                        if (itemTotal) {
-                            const price = parseFloat(itemTotal.textContent.replace('Total: $', ''));
-                            const newTotal = price * quantity;
-                            itemTotal.textContent = `Total: $${newTotal.toFixed(2)}`;
-                        }
-                    } else {
-                        showNotification(data.message || 'Error updating cart', 'error');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showNotification('Error updating cart', 'error');
-                });
-            }
-        }
-        
-        function removeCartItem(productId) {
-            if (confirm('Remove this item from cart?')) {
-                fetch('ajax/remove_from_cart.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        product_id: productId
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        updateCartCount(data.cart_count);
-                        // Remove the cart item from the DOM
-                        const cartItem = document.querySelector(`[data-product-id="${productId}"]`).closest('.cart-item');
-                        if (cartItem) {
-                            cartItem.style.transform = 'scale(0.8)';
-                            cartItem.style.opacity = '0';
-                            setTimeout(() => {
-                                cartItem.remove();
-                                // Check if cart is empty
-                                const remainingItems = document.querySelectorAll('.cart-item');
-                                if (remainingItems.length === 0) {
-                                    location.reload(); // Reload to show empty state
-                                }
-                            }, 300);
-                        }
-                        showNotification('Item removed from cart', 'success');
-                    } else {
-                        showNotification(data.message || 'Error removing item from cart', 'error');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showNotification('Error removing item from cart', 'error');
-                });
-            }
-        }
-        
-        function updateCartCount(count) {
-            const cartCount = document.querySelector('.cart-count');
-            if (cartCount) {
-                cartCount.textContent = count;
-            }
-        }
-        
-        function updateCartTotal(total) {
-            const cartTotal = document.querySelector('.cart-total h3');
-            if (cartTotal) {
-                cartTotal.textContent = `Total: $${total.toFixed(2)}`;
-            }
-        }
-        
-        function showNotification(message, type = 'info') {
-            const notification = document.createElement('div');
-            notification.className = `notification notification-${type}`;
-            notification.textContent = message;
-            
-            // Style the notification
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                padding: 15px 20px;
-                border-radius: 5px;
-                color: white;
-                font-weight: 600;
-                z-index: 10000;
-                opacity: 0;
-                transform: translateX(100%);
-                transition: all 0.3s ease;
-            `;
-            
-            // Set background color based on type
-            switch(type) {
-                case 'success':
-                    notification.style.backgroundColor = '#27ae60';
-                    break;
-                case 'error':
-                    notification.style.backgroundColor = '#e74c3c';
-                    break;
-                case 'warning':
-                    notification.style.backgroundColor = '#f39c12';
-                    break;
-                default:
-                    notification.style.backgroundColor = '#3498db';
-            }
-            
-            document.body.appendChild(notification);
-            
-            // Animate in
-            setTimeout(() => {
-                notification.style.opacity = '1';
-                notification.style.transform = 'translateX(0)';
-            }, 100);
-            
-            // Auto remove after 3 seconds
-            setTimeout(() => {
-                notification.style.opacity = '0';
-                notification.style.transform = 'translateX(100%)';
-                setTimeout(() => {
-                    if (notification.parentNode) {
-                        notification.parentNode.removeChild(notification);
-                    }
-                }, 300);
-            }, 3000);
-        }
-    </script>
-</body>
-</html>
-
-
-
-
+<?php require_once 'includes/footer.php'; ?>

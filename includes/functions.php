@@ -28,14 +28,21 @@ function requireAdmin() {
 }
 
 // Image handling helper
-function getProductImageUrl($path) {
+function getProductImageUrl($path, $forAdmin = false) {
     if (empty($path)) {
-        return 'assets/images/placeholder.svg';
-    }
-    if (strpos($path, 'http://') === 0 || strpos($path, 'https://') === 0) {
-        return htmlspecialchars($path);
+        return $forAdmin ? '../assets/images/placeholder.svg' : 'assets/images/placeholder.svg';
     }
     $trimmed = trim($path);
+    if (strpos($trimmed, 'http://') === 0 || strpos($trimmed, 'https://') === 0) {
+        return htmlspecialchars($trimmed);
+    }
+    if ($forAdmin) {
+        // Avoid double prefixing if already starts with ../
+        if (strpos($trimmed, '../') === 0) {
+            return htmlspecialchars($trimmed);
+        }
+        return '../' . htmlspecialchars(ltrim($trimmed, '/'));
+    }
     return htmlspecialchars($trimmed);
 }
 

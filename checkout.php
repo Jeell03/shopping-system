@@ -54,9 +54,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
         );
 
         if ($orderResult && !empty($orderResult['order_id'])) {
-            // Save address to user profile if blank
+            // Save address & name to user profile if blank
             if (empty($currentUser['address'])) {
-                updateUserProfile($userId, $currentUser['first_name'], $currentUser['last_name'], $shippingPhone, $shippingAddress, $shippingCity, $shippingState, $shippingZip, $shippingCountry);
+                $nameParts = explode(' ', $shippingFullName, 2);
+                $fn = !empty($currentUser['first_name']) ? $currentUser['first_name'] : $nameParts[0];
+                $ln = !empty($currentUser['last_name']) ? $currentUser['last_name'] : ($nameParts[1] ?? '');
+                updateUserProfile($userId, $fn, $ln, $shippingPhone, $shippingAddress, $shippingCity, $shippingState, $shippingZip, $shippingCountry);
             }
 
             clearCart();

@@ -16,6 +16,7 @@ CREATE TABLE users (
     state VARCHAR(50),
     zip_code VARCHAR(10),
     country VARCHAR(50),
+    role ENUM('customer', 'admin') DEFAULT 'customer',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -174,22 +175,22 @@ INSERT INTO categories (name, slug, description) VALUES
 
 -- Insert sample products
 INSERT INTO products (name, slug, description, short_description, price, sale_price, sku, stock_quantity, category_id, image, featured, status) VALUES
-('iPhone 15 Pro', 'iphone-15-pro', 'The latest iPhone with advanced camera system and A17 Pro chip', 'Latest iPhone with Pro camera system', 999.00, 899.00, 'IPH15PRO', 50, 1, 'assets/images/products/iphone15pro.jpg', 1, 'active'),
-('Samsung Galaxy S24', 'samsung-galaxy-s24', 'Premium Android smartphone with AI features', 'Premium Android smartphone', 799.00, NULL, 'SGS24', 30, 1, 'assets/images/products/galaxy-s24.jpg', 1, 'active'),
-('MacBook Air M3', 'macbook-air-m3', 'Ultra-thin laptop with M3 chip for maximum performance', 'Ultra-thin laptop with M3 chip', 1199.00, NULL, 'MBA-M3', 25, 1, 'assets/images/products/macbook-air-m3.jpg', 1, 'active'),
-('Nike Air Max 270', 'nike-air-max-270', 'Comfortable running shoes with Air Max technology', 'Comfortable running shoes', 150.00, 120.00, 'NAM270', 100, 2, 'assets/images/products/nike-air-max-270.jpg', 0, 'active'),
-('Adidas Ultraboost 22', 'adidas-ultraboost-22', 'High-performance running shoes with Boost technology', 'High-performance running shoes', 180.00, NULL, 'AUB22', 75, 2, 'assets/images/products/adidas-ultraboost-22.jpg', 0, 'active'),
-('Levi\'s 501 Jeans', 'levis-501-jeans', 'Classic straight-fit jeans in authentic denim', 'Classic straight-fit jeans', 89.00, 69.00, 'L501', 200, 2, 'assets/images/products/levis-501.jpg', 0, 'active'),
-('Dyson V15 Detect', 'dyson-v15-detect', 'Cordless vacuum with laser dust detection', 'Cordless vacuum with laser detection', 649.00, NULL, 'DV15', 40, 3, 'assets/images/products/dyson-v15.jpg', 1, 'active'),
-('KitchenAid Stand Mixer', 'kitchenaid-stand-mixer', 'Professional stand mixer in multiple colors', 'Professional stand mixer', 329.00, 279.00, 'KASM', 60, 3, 'assets/images/products/kitchenaid-mixer.jpg', 0, 'active'),
-('Wilson Pro Staff Tennis Racket', 'wilson-pro-staff-racket', 'Professional tennis racket for advanced players', 'Professional tennis racket', 199.00, NULL, 'WPSR', 35, 4, 'assets/images/products/wilson-pro-staff.jpg', 0, 'active'),
-('Yoga Mat Premium', 'yoga-mat-premium', 'Non-slip yoga mat with carrying strap', 'Non-slip yoga mat', 45.00, 35.00, 'YMP', 150, 4, 'assets/images/products/yoga-mat.jpg', 0, 'active');
+('iPhone 15 Pro', 'iphone-15-pro', 'The latest iPhone with advanced camera system and A17 Pro chip', 'Latest iPhone with Pro camera system', 999.00, 899.00, 'IPH15PRO', 50, 1, 'Image/iPhone 15 Pro.webp', 1, 'active'),
+('Samsung Galaxy S24', 'samsung-galaxy-s24', 'Premium Android smartphone with AI features', 'Premium Android smartphone', 799.00, NULL, 'SGS24', 30, 1, 'Image/Samsung Galaxy S24.webp', 1, 'active'),
+('MacBook Air M3', 'macbook-air-m3', 'Ultra-thin laptop with M3 chip for maximum performance', 'Ultra-thin laptop with M3 chip', 1199.00, NULL, 'MBA-M3', 25, 1, 'Image/MacBook Air M3.webp', 1, 'active'),
+('Nike Air Max 270', 'nike-air-max-270', 'Comfortable running shoes with Air Max technology', 'Comfortable running shoes', 150.00, 120.00, 'NAM270', 100, 2, 'Image/Nike Air Max 270.webp', 0, 'active'),
+('Adidas Ultraboost 22', 'adidas-ultraboost-22', 'High-performance running shoes with Boost technology', 'High-performance running shoes', 180.00, NULL, 'AUB22', 75, 2, 'Image/Adidas Ultraboost 22.webp', 0, 'active'),
+('Levi\'s 501 Jeans', 'levis-501-jeans', 'Classic straight-fit jeans in authentic denim', 'Classic straight-fit jeans', 89.00, 69.00, 'L501', 200, 2, 'Image/Levi\'s 501 Jeans.webp', 0, 'active'),
+('Dyson V15 Detect', 'dyson-v15-detect', 'Cordless vacuum with laser dust detection', 'Cordless vacuum with laser detection', 649.00, NULL, 'DV15', 40, 3, 'Image/Dyson V15 Detect.webp', 1, 'active'),
+('KitchenAid Stand Mixer', 'kitchenaid-stand-mixer', 'Professional stand mixer in multiple colors', 'Professional stand mixer', 329.00, 279.00, 'KASM', 60, 3, 'Image/KitchenAid Stand Mixer.webp', 0, 'active'),
+('Wilson Pro Staff Tennis Racket', 'wilson-pro-staff-racket', 'Professional tennis racket for advanced players', 'Professional tennis racket', 199.00, NULL, 'WPSR', 35, 4, 'Image/Wilson Pro Staff Tennis Racket.webp', 0, 'active'),
+('Yoga Mat Premium', 'yoga-mat-premium', 'Non-slip yoga mat with carrying strap', 'Non-slip yoga mat', 45.00, 35.00, 'YMP', 150, 4, 'Image/Yoga Mat Premium.webp', 0, 'active');
 
 -- Insert sample users (password is 'password123' hashed)
-INSERT INTO users (username, email, password, first_name, last_name, phone, address, city, state, zip_code, country) VALUES
-('admin', 'admin@shopeasy.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Admin', 'User', '555-0100', '123 Admin St', 'New York', 'NY', '10001', 'USA'),
-('john_doe', 'john@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'John', 'Doe', '555-0101', '456 Main St', 'Los Angeles', 'CA', '90210', 'USA'),
-('jane_smith', 'jane@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Jane', 'Smith', '555-0102', '789 Oak Ave', 'Chicago', 'IL', '60601', 'USA');
+INSERT INTO users (username, email, password, first_name, last_name, phone, address, city, state, zip_code, country, role) VALUES
+('admin', 'admin@shopeasy.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Admin', 'User', '555-0100', '123 Admin St', 'New York', 'NY', '10001', 'USA', 'admin'),
+('john_doe', 'john@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'John', 'Doe', '555-0101', '456 Main St', 'Los Angeles', 'CA', '90210', 'USA', 'customer'),
+('jane_smith', 'jane@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Jane', 'Smith', '555-0102', '789 Oak Ave', 'Chicago', 'IL', '60601', 'USA', 'customer');
 
 -- Insert sample coupons
 INSERT INTO coupons (code, description, discount_type, discount_value, minimum_amount, valid_from, valid_until, status) VALUES

@@ -47,7 +47,7 @@ $ratingDist = getRatingDistribution($productId);
 $relatedProducts = getRelatedProducts($product['category_id'], $productId, 4);
 
 $imgUrl = getProductImageUrl($product['image']);
-$pageTitle = htmlspecialchars($product['name']) . ' - Buy Online at Best Price on ShopEasy';
+$pageTitle = $product['name'] . ' - Buy Online at Best Price on ShopEasy';
 $activeNav = $product['category_slug'] ?? 'products';
 $inWishlist = isLoggedIn() ? isInWishlist($_SESSION['user_id'], $product['id']) : false;
 
@@ -212,7 +212,7 @@ require_once 'includes/header.php';
                 <div class="purchase-actions-box">
                     <div class="qty-stepper">
                         <button type="button" class="qty-step-btn" onclick="stepDetailQty(-1)">-</button>
-                        <input type="text" id="detailQtyInput" class="qty-input" value="1" readonly>
+                        <input type="text" id="detailQtyInput" class="qty-input" value="<?php echo $product['stock_quantity'] > 0 ? '1' : '0'; ?>" readonly>
                         <button type="button" class="qty-step-btn" onclick="stepDetailQty(1)">+</button>
                     </div>
 
@@ -464,9 +464,11 @@ function switchProductImage(src, thumbElement) {
 }
 
 function stepDetailQty(delta) {
+    const maxStock = <?php echo (int)$product['stock_quantity']; ?>;
+    if (maxStock <= 0) return;
     const input = document.getElementById('detailQtyInput');
     const current = parseInt(input.value) || 1;
-    const next = Math.max(1, Math.min(<?php echo (int)$product['stock_quantity']; ?>, current + delta));
+    const next = Math.max(1, Math.min(maxStock, current + delta));
     input.value = next;
 }
 

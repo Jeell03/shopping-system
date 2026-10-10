@@ -16,7 +16,7 @@ if (!$order) {
     exit();
 }
 
-$pageTitle = 'Order Confirmed #' . htmlspecialchars($order['order_number']) . ' - ShopEasy';
+$pageTitle = 'Order Confirmed #' . $order['order_number'] . ' - ShopEasy';
 $activeNav = 'profile';
 
 require_once 'includes/header.php';

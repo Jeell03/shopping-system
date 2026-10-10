@@ -17,7 +17,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_category'])) {
     if (empty($name)) {
         $error = 'Category name is required.';
     } else {
-        $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $name)));
+        $baseSlug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $name), '-'));
+        if (empty($baseSlug)) {
+            $baseSlug = 'category-' . time();
+        }
+        $slug = $baseSlug;
+        $check = $pdo->prepare("SELECT id FROM categories WHERE slug = ? AND id != ?");
+        $check->execute([$slug, $catId]);
+        if ($check->fetch()) {
+            $slug = $baseSlug . '-' . time();
+        }
         
         if ($catId > 0) {
             // Update
@@ -26,12 +35,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_category'])) {
             $success = 'Category updated successfully!';
         } else {
             // Create
-            // Ensure unique slug
-            $check = $pdo->prepare("SELECT id FROM categories WHERE slug = ?");
-            $check->execute([$slug]);
-            if ($check->fetch()) {
-                $slug .= '-' . rand(10, 99);
-            }
             $stmt = $pdo->prepare("INSERT INTO categories (name, slug, description, image, created_at) VALUES (?, ?, ?, ?, NOW())");
             $stmt->execute([$name, $slug, $description, $image]);
             $success = 'Category added successfully!';

@@ -107,10 +107,10 @@ $categories = getCategories();
                 </tr>
             <?php else: ?>
                 <?php foreach ($products as $p): ?>
-                <?php $pImg = getProductImageUrl($p['image']); ?>
+                <?php $pImg = getProductImageUrl($p['image'], true); ?>
                 <tr>
                     <td>
-                        <img src="../<?php echo $pImg; ?>" alt="" style="width: 44px; height: 44px; object-fit: contain; border-radius: 6px; background: #f8fafc; border: 1px solid #e2e8f0; padding: 2px;">
+                        <img src="<?php echo $pImg; ?>" alt="" style="width: 44px; height: 44px; object-fit: contain; border-radius: 6px; background: #f8fafc; border: 1px solid #e2e8f0; padding: 2px;">
                     </td>
                     <td>
                         <strong><?php echo htmlspecialchars($p['name']); ?></strong>

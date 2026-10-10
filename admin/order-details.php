@@ -68,11 +68,11 @@ if (!$order) {
                 </thead>
                 <tbody>
                     <?php foreach ($order['items'] as $it): ?>
-                    <?php $img = getProductImageUrl($it['image']); ?>
+                    <?php $img = getProductImageUrl($it['image'], true); ?>
                     <tr>
                         <td>
                             <div style="display: flex; align-items: center; gap: 12px;">
-                                <img src="../<?php echo $img; ?>" alt="" style="width: 40px; height: 40px; object-fit: contain; background: #f8fafc; border-radius: 4px; padding: 2px;">
+                                <img src="<?php echo $img; ?>" alt="" style="width: 40px; height: 40px; object-fit: contain; background: #f8fafc; border-radius: 4px; padding: 2px;">
                                 <strong><?php echo htmlspecialchars($it['name']); ?></strong>
                             </div>
                         </td>

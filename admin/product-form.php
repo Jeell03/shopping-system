@@ -36,7 +36,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($name) || $price <= 0) {
         $error = 'Product name and a valid regular price are required.';
     } else {
-        $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $name)));
+        $baseSlug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $name), '-'));
+        if (empty($baseSlug)) {
+            $baseSlug = 'product-' . time();
+        }
+        $slug = $baseSlug;
+        $checkStmt = $pdo->prepare("SELECT id FROM products WHERE slug = ? AND id != ?");
+        $checkStmt->execute([$slug, $productId]);
+        if ($checkStmt->fetch()) {
+            $slug = $baseSlug . '-' . time();
+        }
 
         if ($isEdit) {
             $stmt = $pdo->prepare("

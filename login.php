@@ -19,7 +19,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Please fill in all fields';
     } else {
         if (loginUser($username, $password)) {
-            $redirectUrl = $_SESSION['redirect_after_login'] ?? 'index.php';
+            $defaultRedirect = isAdmin() ? 'admin/index.php' : 'index.php';
+            $redirectUrl = $_SESSION['redirect_after_login'] ?? $defaultRedirect;
             unset($_SESSION['redirect_after_login']);
             header("Location: $redirectUrl");
             exit();
